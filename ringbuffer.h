@@ -86,30 +86,30 @@
 #define RINGBUFFER_AVOID_MODULO 0
 #endif
 
-#define ringBuffer_typedef(T, NAME) \
-  typedef struct { \
-    int size; \
-    int start; \
-    int end; \
-    T* elems; \
-  } NAME
-  
+#define ringBuffer_typedef(T, NAME)                                           \
+    typedef struct                                                            \
+    {                                                                         \
+        int size;                                                             \
+        int start;                                                            \
+        int end;                                                              \
+        T *elems;                                                             \
+    } NAME
 
 /* To allow for S elements to be stored we allocate space for (S + 1) elements,
  * otherwise a full buffer would be indistinguishable from an empty buffer.
- * 
+ *
  * Also as the elements will be accessed like an array it makes sense to pad
  * the type of the elements to the platform wordsize, otherwise you will end up
  * with unaligned accesses. */
 #if RINGBUFFER_USE_STATIC_MEMORY == 1
-#define bufferInit(BUF, S, T) \
-  { \
-    static T StaticBufMemory[S + 1];\
-    BUF.elems = StaticBufMemory; \
-  } \
-    BUF.size = S; \
-    BUF.start = 0; \
-    BUF.end = 0;
+#define bufferInit(BUF, S, T)                                                 \
+    {                                                                         \
+        static T StaticBufMemory[S + 1];                                      \
+        BUF.elems = StaticBufMemory;                                          \
+    }                                                                         \
+    BUF.size  = S;                                                            \
+    BUF.start = 0;                                                            \
+    BUF.end   = 0;
 
 /* This has only been tested with GCC */
 #if defined(__GNUC__)
@@ -117,101 +117,103 @@
 /* In cases where the developer needs to explicitly arrange memory in linker
  * scripts, this macro allows to specify the linker section the buffer will
  * be allocated in. */
-#define bufferInitWithSection(SECTION, BUF, S, T) \
-    { \
-        __attribute__((section(SECTION))) static T StaticBufMemory[S + 1]; \
-        BUF.elems = StaticBufMemory; \
-    } \
-    BUF.size = S; \
-    BUF.start = 0; \
-    BUF.end = 0;
+#define bufferInitWithSection(SECTION, BUF, S, T)                             \
+    {                                                                         \
+        __attribute__ ((section (SECTION))) static T StaticBufMemory[S + 1];  \
+        BUF.elems = StaticBufMemory;                                          \
+    }                                                                         \
+    BUF.size  = S;                                                            \
+    BUF.start = 0;                                                            \
+    BUF.end   = 0;
 
 #endif
 
 #else
-  
-#define bufferInit(BUF, S, T) \
-  BUF.size = S; \
-  BUF.start = 0; \
-  BUF.end = 0; \
-  BUF.elems = (T*)calloc(BUF.size + 1, sizeof(T))
 
-#define bufferDestroy(BUF) free((BUF)->elems)
+#define bufferInit(BUF, S, T)                                                 \
+    BUF.size  = S;                                                            \
+    BUF.start = 0;                                                            \
+    BUF.end   = 0;                                                            \
+    BUF.elems = (T *)malloc (sizeof (T) * (BUF.size + 1))
+
+#define bufferDestroy(BUF) free ((BUF)->elems)
 
 #endif
 
-  
 #if RINGBUFFER_AVOID_MODULO == 1
-  
-#define nextStartIndex(BUF) (((BUF)->start != (BUF)->size) ? ((BUF)->start + 1) : 0)
+
+#define nextStartIndex(BUF)                                                   \
+    (((BUF)->start != (BUF)->size) ? ((BUF)->start + 1) : 0)
 #define nextEndIndex(BUF) (((BUF)->end != (BUF)->size) ? ((BUF)->end + 1) : 0)
-  
+
 #else
-  
+
 #define nextStartIndex(BUF) (((BUF)->start + 1) % ((BUF)->size + 1))
-#define nextEndIndex(BUF) (((BUF)->end + 1) % ((BUF)->size + 1))
-  
+#define nextEndIndex(BUF)   (((BUF)->end + 1) % ((BUF)->size + 1))
+
 #endif
 
-#define nextIndex(BUF, IX)     ({ ((IX != ((BUF)->size - 1)) ? (IX + 1) : 0); });
+#define nextIndex(BUF, IX) ({ ((IX != ((BUF)->size - 1)) ? (IX + 1) : 0); });
 #define previousIndex(BUF, IX) ({ ((IX != 0) ? (IX - 1) : ((BUF)->size)); });
 
 #define isBufferEmpty(BUF) ((BUF)->end == (BUF)->start)
-#define isBufferFull(BUF) (nextEndIndex(BUF) == (BUF)->start)
+#define isBufferFull(BUF)  (nextEndIndex (BUF) == (BUF)->start)
 
-#define bufferUsedSpace(BUF) \
-    (isBufferEmpty(BUF) ? 0 \
-     : ((BUF)->start < (BUF)->end) \
-         ? (((BUF)->end - (BUF)->start)) \
+#define bufferUsedSpace(BUF)                                                  \
+    (isBufferEmpty (BUF) ? 0                                                  \
+     : ((BUF)->start < (BUF)->end)                                            \
+         ? (((BUF)->end - (BUF)->start))                                      \
          : ((BUF)->size - ((BUF)->start - (BUF)->end - 1)))
 
-#define bufferFreeSpace(BUF) ((BUF)->size - (bufferUsedSpace(BUF)))
+#define bufferFreeSpace(BUF) ((BUF)->size - (bufferUsedSpace (BUF)))
 
 #define bufferWritePeek(BUF) (BUF)->elems[(BUF)->end]
-#define bufferWriteSkip(BUF) \
-  (BUF)->end = nextEndIndex(BUF); \
-  if (isBufferEmpty(BUF)) { \
-    (BUF)->start = nextStartIndex(BUF); \
-  }
+#define bufferWriteSkip(BUF)                                                  \
+    (BUF)->end = nextEndIndex (BUF);                                          \
+    if (isBufferEmpty (BUF))                                                  \
+        {                                                                     \
+            (BUF)->start = nextStartIndex (BUF);                              \
+        }
 
 #define bufferReadPeek(BUF) (BUF)->elems[(BUF)->start]
-#define bufferReadSkip(BUF) \
-  (BUF)->start = nextStartIndex(BUF);
+#define bufferReadSkip(BUF) (BUF)->start = nextStartIndex (BUF);
 
 /* Variable names are weird here to avoid variable shadowing.
  * I don't think this is the best way to handle this issue,
- * but if you actually want to use "asdfghhgfsa" as a 
+ * but if you actually want to use "asdfghhgfsa" as a
  * variable name, you've got bigger problems. */
-#define bufferPeekBack(BUF, STEPS, ELEM) \
-    ({ \
-        int asdfghhgfsa = previousIndex(BUF, (BUF)->end); \
-        for (int qpwoeiieowpq = 0; qpwoeiieowpq < STEPS; qpwoeiieowpq++) { \
-            asdfghhgfsa = previousIndex(BUF, asdfghhgfsa); \
-        } \
-        ELEM = (BUF)->elems[asdfghhgfsa]; \
+#define bufferPeekBack(BUF, STEPS, ELEM)                                      \
+    ({                                                                        \
+        int asdfghhgfsa = previousIndex (BUF, (BUF)->end);                    \
+        for (int qpwoeiieowpq = 0; qpwoeiieowpq < STEPS; qpwoeiieowpq++)      \
+            {                                                                 \
+                asdfghhgfsa = previousIndex (BUF, asdfghhgfsa);               \
+            }                                                                 \
+        ELEM = (BUF)->elems[asdfghhgfsa];                                     \
     });
 
-#define bufferPeekForward(BUF, STEPS, ELEM) \
-    ({ \
-        int asdfghhgfsa = (BUF)->start; \
-        for (int qpwoeiieowpq = 0; qpwoeiieowpq < STEPS; qpwoeiieowpq++) { \
-            asdfghhgfsa = nextIndex(BUF, asdfghhgfsa);\
-        } \
-        ELEM = (BUF)->elems[asdfghhgfsa];\
+#define bufferPeekForward(BUF, STEPS, ELEM)                                   \
+    ({                                                                        \
+        int asdfghhgfsa = (BUF)->start;                                       \
+        for (int qpwoeiieowpq = 0; qpwoeiieowpq < STEPS; qpwoeiieowpq++)      \
+            {                                                                 \
+                asdfghhgfsa = nextIndex (BUF, asdfghhgfsa);                   \
+            }                                                                 \
+        ELEM = (BUF)->elems[asdfghhgfsa];                                     \
     });
 
-#define bufferWrite(BUF, ELEM) \
-  bufferWritePeek(BUF) = ELEM; \
-  bufferWriteSkip(BUF)
+#define bufferWrite(BUF, ELEM)                                                \
+    bufferWritePeek (BUF) = ELEM;                                             \
+    bufferWriteSkip (BUF)
 
-#define bufferRead(BUF, ELEM) \
-  ELEM = bufferReadPeek(BUF); \
-  bufferReadSkip(BUF)
+#define bufferRead(BUF, ELEM)                                                 \
+    ELEM = bufferReadPeek (BUF);                                              \
+    bufferReadSkip (BUF)
 
-#define bufferReset(BUF) \
-    ({ \
-        (BUF)->start = 0; \
-        (BUF)->end = 0; \
+#define bufferReset(BUF)                                                      \
+    ({                                                                        \
+        (BUF)->start = 0;                                                     \
+        (BUF)->end   = 0;                                                     \
     });
-  
+
 #endif
