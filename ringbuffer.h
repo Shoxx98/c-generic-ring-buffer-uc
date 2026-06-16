@@ -92,7 +92,7 @@
         int size;                                                             \
         int start;                                                            \
         int end;                                                              \
-        T *elems;                                                             \
+        T  *elems;                                                            \
     } NAME
 
 /* To allow for S elements to be stored we allocate space for (S + 1) elements,
