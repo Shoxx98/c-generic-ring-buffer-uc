@@ -104,7 +104,7 @@
 #if RINGBUFFER_USE_STATIC_MEMORY == 1
 #define bufferInit(BUF, S, T)                                                 \
     {                                                                         \
-        static T StaticBufMemory[S + 1];                                      \
+        static T StaticBufMemory[S];                                          \
         BUF.elems = StaticBufMemory;                                          \
     }                                                                         \
     BUF.size  = S;                                                            \
@@ -119,7 +119,7 @@
  * be allocated in. */
 #define bufferInitWithSection(SECTION, BUF, S, T)                             \
     {                                                                         \
-        __attribute__ ((section (SECTION))) static T StaticBufMemory[S + 1];  \
+        __attribute__ ((section (SECTION))) static T StaticBufMemory[S];      \
         BUF.elems = StaticBufMemory;                                          \
     }                                                                         \
     BUF.size  = S;                                                            \
