@@ -2,7 +2,7 @@
  * File              : ringbuffer_macros.h
  * License           : see LICENSE.txt in the root dir. If there is none, it's GPLv3
  * Author            : Philip Thrasher
- * Last Modified Date: 26.08.2026
+ * Last Modified Date: 07.10.2026
  * Last Modified By  : Jonas Gilbricht <jonas.g.jobs@gmail.com>
  * Copyright (c) 2013 Philip Thrasher
  */
@@ -55,9 +55,9 @@
  *
  */
 
+#if USE_MACROS == 1
 #ifndef _ringbuffer_h
 #define _ringbuffer_h
-
 /* Setting RINGBUFFER_USE_STATIC_MEMORY to 1 will use a static memory area
  * allocated for the ringbuffer instead of a dynamic one, useful if there is no
  * dynamic allocation or the buffer will always be around anyways. There is no
@@ -202,4 +202,5 @@
         (BUF)->end   = 0;                                                     \
     });
 
+#endif
 #endif
